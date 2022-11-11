@@ -21,6 +21,13 @@ type InfoBlog struct {
 	Created time.Time
 }
 
+type Comment struct {
+	ID       int
+	Username string
+	Created  time.Time
+	text     string
+}
+
 type InfoBlogsModel struct {
 	DB *pgxpool.Pool
 }
@@ -184,15 +191,12 @@ func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (int
 	return id, nil
 }
 
-func (m *InfoBlogsModel) GetComments(blog_id int) (*InfoBlog, error) {
+func (m *InfoBlogsModel) GetComments(blog_id int) ([]*Comment, error) {
 
-	info := &InfoBlog{}
+	stmt := "SELECT c.comment_id, u.name, c.created, c.text FROM comments c join users u on c.user_id = users.id where blog_id = $1"
 
-	stmt := "SELECT id, title, content, created, img FROM infoblogs where id = $1"
+	result, err := m.DB.Query(ctx, stmt, blog_id)
 
-	row := m.DB.QueryRow(ctx, stmt, id)
-
-	err := row.Scan(&info.ID, &info.Title, &info.Content, &info.Created, &info.Img)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -200,15 +204,18 @@ func (m *InfoBlogsModel) GetComments(blog_id int) (*InfoBlog, error) {
 			return nil, err
 		}
 	}
+	var comments []*Comment
+	for result.Next() {
+		s := &Comment{}
+		err := result.Scan(&s.ID, &s.Username, &s.Created, &s.text)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNoRecord
+			}
+			return nil, err
+		}
+		comments = append(comments, s)
+	}
+	return comments, nil
 
-	//shortly version
-	//err := m.DB.QueryRow(ctx, stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
-	//if err != nil {
-	//  if errors.Is(err, sql.ErrNoRows) {
-	//    return nil, ErrNoRecord
-	//  } else {
-	//    return nil, err
-	//  }
-	//}
-	return info, nil
 }
