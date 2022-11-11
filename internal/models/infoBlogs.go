@@ -110,7 +110,7 @@ func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 	var infoblog []*InfoBlog
 	for result.Next() {
 		s := &InfoBlog{}
-		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Created, &s.Img)
+		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Img, &s.Created)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNoRecord
@@ -118,6 +118,9 @@ func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 			return nil, err
 		}
 		infoblog = append(infoblog, s)
+	}
+	if err = result.Err(); err != nil {
+		return nil, err
 	}
 	return infoblog, nil
 }
