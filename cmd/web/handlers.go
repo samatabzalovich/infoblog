@@ -19,6 +19,11 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 
 	app.render(w, http.StatusOK, "about.html", data)
 }
+func (app *application) post(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	app.render(w, http.StatusOK, "samplePost.html", data)
+}
 
 func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
 
