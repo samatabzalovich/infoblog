@@ -12,10 +12,9 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static/", fileServer))
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
-	protected := dynamic.Append(app.requireAuthentication)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/infoBlog/about", dynamic.ThenFunc(app.about))
@@ -24,12 +23,15 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/users/signup", dynamic.ThenFunc(app.signup))
 	router.Handler(http.MethodPost, "/users/signup", dynamic.ThenFunc(app.userSignupPost))
 	router.Handler(http.MethodGet, "/infoBlog/contact", dynamic.ThenFunc(app.contact))
-	//router.Handler(http.MethodGet, "/infoblogs/view/:id", protected.ThenFunc(app.postComment))
+	router.Handler(http.MethodGet, "/infoBlog/samplePost", dynamic.ThenFunc(app.post))
+	router.Handler(http.MethodGet, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogDetailPage))
+	router.Handler(http.MethodPost, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogDetailPagePost))
+
+	router.Handler(http.MethodGet, "/infoBlog/create", dynamic.ThenFunc(app.createBlog))
+	router.Handler(http.MethodPost, "/infoBlog/create", dynamic.ThenFunc(app.createBlogPost))
+	protected := dynamic.Append(app.requireAuthentication)
 
 	router.Handler(http.MethodPost, "/users/logout", protected.ThenFunc(app.userLogoutPost))
-
-	router.Handler(http.MethodGet, "/infoBlog/samplePost", dynamic.ThenFunc(app.post))
-	//router.Handler(http.MethodGet, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogView))
 	//router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
 	//router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 

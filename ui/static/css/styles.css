@@ -2734,6 +2734,8 @@ textarea.form-control-lg {
   padding-top: 2.125rem;
   padding-bottom: 0.625rem;
 }
+
+
 .form-floating > .form-control:not(:-moz-placeholder-shown) ~ label {
   opacity: 0.65;
   transform: scale(0.65) translateY(-0.5rem) translateX(0rem);
