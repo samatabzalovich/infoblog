@@ -160,7 +160,7 @@ func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 }
 
 type likeForm struct {
-	Like                string `form:"checkbox""`
+	Signup              string `form:"submit"`
 	validator.Validator `form:"-"`
 }
 
@@ -172,8 +172,8 @@ func (app *application) blogDetailPagePost(w http.ResponseWriter, r *http.Reques
 		app.notFound(w)
 		return
 	}
-
 	var form likeForm
+	print(form.Signup)
 	err = app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -185,12 +185,10 @@ func (app *application) blogDetailPagePost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
 
 }
 func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
-	id2 := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-	print(id2)
-	print("\n\n\n\n\n\n")
 
 	params := httprouter.ParamsFromContext(r.Context())
 
@@ -210,28 +208,17 @@ func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var form likeForm
-	err = app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	err = app.infoBlogs.ToLike(id, 10)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	data := app.newTemplateData(r)
 	data.InfoBlog = blog
 	data.Form = models.InfoBlog{}
+	data.Form = likeForm{}
 	app.render(w, http.StatusOK, "samplePost.html", data)
 
 }
 
 func (app *application) createBlog(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-
+	data.Form = blogCreateForm{}
 	app.render(w, http.StatusOK, "createBlog.html", data)
 }
 
@@ -249,6 +236,9 @@ func (app *application) createBlogPost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	id3 := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	print(id3)
+	print("\n\n\n\n\n")
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
@@ -265,5 +255,5 @@ func (app *application) createBlogPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/infoBlog/create"), http.StatusSeeOther)
 }

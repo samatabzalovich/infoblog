@@ -55,6 +55,17 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) requireAuthenticationAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !app.isAuthenticatedAdmin(r) {
+			http.Redirect(w, r, "/users/login", http.StatusSeeOther)
+			return
+		}
+		w.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func noSurf(next http.Handler) http.Handler {
 	csrfHandler := nosurf.New(next)
 	csrfHandler.SetBaseCookie(http.Cookie{

@@ -17,12 +17,31 @@ type User struct {
 	Email          string
 	HashedPassword []byte
 	Created        time.Time
+	Status         string
 }
 
 type UserModel struct {
 	DB *pgxpool.Pool
 }
 
+func (m *UserModel) GetUserId(id int) (*User, error) {
+
+	info := &User{}
+
+	stmt := "SELECT * FROM users where id = $1"
+
+	row := m.DB.QueryRow(ctx, stmt, id)
+
+	err := row.Scan(&info.ID, &info.Name, &info.Email, &info.HashedPassword, &info.Created, &info.Status)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+	return info, nil
+}
 func (m *UserModel) Insert(name, email, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
@@ -44,6 +63,7 @@ func (m *UserModel) Insert(name, email, password string) error {
 	}
 	return nil
 }
+
 func (m *UserModel) Authenticate(email, password string) (int, error) {
 	var id int
 	var hashedPassword []byte

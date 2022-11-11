@@ -15,9 +15,10 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear: time.Now().Year(),
 		// Add the flash message to the template data, if one exists.
-		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
-		IsAuthenticated: app.isAuthenticated(r),
-		CSRFToken:       nosurf.Token(r),
+		Flash:                app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated:      app.isAuthenticated(r),
+		IsAuthenticatedAdmin: app.isAuthenticatedAdmin(r),
+		CSRFToken:            nosurf.Token(r),
 	}
 }
 
@@ -93,4 +94,21 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 		return false
 	}
 	return isAuthenticated
+}
+func (app *application) isAuthenticatedAdmin(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	blog, err := app.users.GetUserId(id)
+	if err != nil {
+		return false
+	}
+	print(blog.Status)
+	print("\n\n\n\n")
+	if blog.Status == "admin" {
+		return isAuthenticated
+	}
+	return false
 }

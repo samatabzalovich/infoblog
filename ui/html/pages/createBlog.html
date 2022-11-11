@@ -1,6 +1,5 @@
 {{define "title"}}Create{{end}}
 {{define "main"}}
-<!-- Page Header -->
 <header class="masthead" style="background-image: url('/img/contact-bg.jpg')">
     <div class="overlay"></div>
     <div class="container">
@@ -13,23 +12,30 @@
         </div>
     </div>
 </header>
-
+{{with .Flash}}
+<div class='flash'>{{.}}</div>
+{{end}}
 <!-- Main Content -->
 <div class="container">
     <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
             <form action="/infoBlog/create" method="POST" novalidate>
-
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 <div class="control-group">
                     <div class="form-group floating-label-form-group controls">
                         <label>Title</label>
-                        <input type='text' class='form-control' name='name' value="{{.Form.Title}}">
+                        {{with .Form.FieldErrors.title}}
+                        <label class='error'>{{.}}</label>
+                        {{end}}
+                        <input type='text' class='form-control' name='title' value="{{.Form.Title}}">
                     </div>
                 </div>
                 <div class="control-group">
                     <div class="form-group floating-label-form-group controls">
                         <label>Description</label>
-
+                        {{with .Form.FieldErrors.content}}
+                        <label class='error'>{{.}}</label>
+                        {{end}}
                         <textarea rows="5" class="form-control" name="content">{{.Form.Content}}</textarea>
                         <p class="help-block text-danger"></p>
                     </div>
