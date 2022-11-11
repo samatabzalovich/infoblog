@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"github.com/alexedwards/scs/pgxstore"
@@ -27,8 +26,8 @@ type application struct {
 }
 
 func main() {
-	addr := flag.String("addr", "localhost:4001", "HTTP network address")
-	dbURL := "postgres://postgres:1qwerty7@localhost:5432/infoblog"
+	addr := flag.String("addr", "localhost:4000", "HTTP network address")
+	dbURL := "postgres://postgres:190704Samat@localhost:5432/infoblog"
 	flag.Parse()
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
@@ -49,7 +48,6 @@ func main() {
 	sessionManager.Store = pgxstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
 	// And add the session manager to our application dependencies.
-	sessionManager.Cookie.Secure = true
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
@@ -58,20 +56,15 @@ func main() {
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
 	}
-	tlsConfig := &tls.Config{
-		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-	}
 	srv := &http.Server{
-		Addr:         *addr,
-		ErrorLog:     errorLog,
-		Handler:      app.routes(),
-		TLSConfig:    tlsConfig,
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  app.routes(),
 	}
 	infoLog.Printf("Starting server on %s", *addr)
-
+	// Use the ListenAndServeTLS() method to start the HTTPS server. We
+	// pass in the paths to the TLS certificate and corresponding private key as
+	// the two parameters.
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
