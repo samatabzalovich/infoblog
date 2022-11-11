@@ -102,19 +102,14 @@ func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 	stmt := `SELECT * FROM infoblogs order by created desc limit 10`
 	result, err := m.DB.Query(context.Background(), stmt)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNoRecord
-		}
+		return nil, err
 	}
+	infoblog := []*InfoBlog{}
 	defer result.Close()
-	var infoblog []*InfoBlog
 	for result.Next() {
 		s := &InfoBlog{}
-		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Img, &s.Created)
+		err = result.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Img, &s.Likes)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNoRecord
-			}
 			return nil, err
 		}
 		infoblog = append(infoblog, s)

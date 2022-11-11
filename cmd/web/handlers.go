@@ -155,25 +155,31 @@ func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "contact.html", data)
 }
 
-func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
+func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
+
 	params := httprouter.ParamsFromContext(r.Context())
+
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
 	}
-	infoBlog, err := app.infoBlogs.Get(id)
+
+	blog, err := app.infoBlogs.Get(id)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
+		if err == models.ErrNoRecord {
 			app.notFound(w)
 		} else {
 			app.serverError(w, err)
 		}
 		return
 	}
+
 	data := app.newTemplateData(r)
-	data.InfoBlog = infoBlog
+	data.InfoBlog = blog
+
 	app.render(w, http.StatusOK, "samplePost.html", data)
+
 }
 
 func (app *application) blogPost(w http.ResponseWriter, r *http.Request) {
