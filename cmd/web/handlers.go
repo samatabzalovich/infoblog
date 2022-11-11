@@ -157,6 +157,9 @@ func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
+	id2 := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	print(id2)
+	print("\n\n\n\n\n\n")
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
@@ -182,7 +185,7 @@ func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := app.newTemplateData(r)
-	data.Form = commentForm{}
+	data.Form = models.InfoBlog{}
 	data.InfoBlog = infoBlog
 	data.Comments = comment
 	println("wqdqwdwqd\n\n")
