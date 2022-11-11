@@ -3,7 +3,7 @@ package main
 import "net/http"
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	blogs, err := app.infoBlogs.Latest()
+	blogs, err := app.infoBlogs.GetPopular()
 	if err != nil {
 		app.serverError(w, err)
 		return

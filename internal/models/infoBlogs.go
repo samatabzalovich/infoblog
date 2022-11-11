@@ -66,7 +66,7 @@ func (m *InfoBlogsModel) Get(id int) (*InfoBlog, error) {
 	return info, nil
 }
 
-func (m *InfoBlogsModel) getPopular() ([]*InfoBlog, error) {
+func (m *InfoBlogsModel) GetPopular() ([]*InfoBlog, error) {
 	stmt := `SELECT * FROM infoblogs s order by likes desc limit 10`
 	result, err := m.DB.Query(context.Background(), stmt)
 	if err != nil {
