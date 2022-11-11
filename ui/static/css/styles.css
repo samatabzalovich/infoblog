@@ -11281,3 +11281,95 @@ header.masthead .site-heading .h1 {
     font-size: 2.25rem;
   }
 }
+
+:root {
+  --color-blue: rgb(78, 101, 203);
+  --color-purple: rgb(113,75,128);
+  --color-pink: rgb(203, 66, 116);
+
+  --transition-time: 500ms;
+  --transition-ease: cubic-bezier(.1,.7,.8,.3);
+}
+
+
+.toggle {
+  display: flex;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  place-items: center;
+  place-content: center;
+
+&:hover {
+   background-color: rgba(203,66,116, 0.1);
+ }
+}
+
+#heart-check {
+  position: absolute;
+  visibility: hidden;
+}
+
+#heart {
+  cursor: pointer;
+svg {
+  width: 48px;
+}
+#stroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+#initial {
+  stroke-width: 1.5;
+  stroke: var(--color-pink);
+  fill: transparent;
+}
+}
+
+#heart-check:checked + #heart {
+svg {
+  transform-origin: 50% 50%;
+  animation: heart var(--transition-time) cubic-bezier(.64,-1.5,.64,1.5);
+  animation-fill-mode: forwards;
+}
+#initial {
+  display: none;
+}
+#stroke {
+  animation: stroke var(--transition-time) var(--transition-ease);
+  animation-fill-mode: forwards;
+}
+}
+
+@keyframes heart {
+  from {
+    transform: scale(1)
+  }
+  78% {
+    transform: scale(1.25)
+  }
+  to {
+    transform: scale(1)
+  }
+}
+
+@keyframes stroke {
+  from {
+    stroke: var(--color-blue);
+    fill: transparent
+
+  }
+  50% {
+    stroke: var(--color-purple);
+  }
+  85% {
+    fill: transparent
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke: var(--color-pink);
+    fill: var(--color-pink)
+  }
+}
