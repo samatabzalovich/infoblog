@@ -119,6 +119,9 @@ func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 		}
 		infoblog = append(infoblog, s)
 	}
+	if err = result.Err(); err != nil {
+		return nil, err
+	}
 	return infoblog, nil
 }
 
