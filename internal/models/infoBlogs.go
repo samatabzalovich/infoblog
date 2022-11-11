@@ -58,8 +58,8 @@ func (m *InfoBlogsModel) Get(id int) (*InfoBlog, error) {
 }
 func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 
-	stmt := `SELECT id, title, content, created, expires FROM snippets
-				WHERE expires > current_timestamp ORDER BY id DESC LIMIT 10`
+	stmt := `SELECT id, title, content, created FROM infoblogs
+				ORDER BY id DESC LIMIT 10`
 
 	rows, err := m.DB.Query(ctx, stmt)
 	if err != nil {
