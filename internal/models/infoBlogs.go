@@ -171,3 +171,44 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 	}
 	return nil
 }
+
+func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (int, error) {
+	stmt := `INSERT INTO comments (blog_id, user_id, text, created) VALUES ($1, $2, $3, current_timestamp) returning id`
+
+	var id int
+	err := m.DB.QueryRow(ctx, stmt, blog_id, user_id, text).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (m *InfoBlogsModel) GetComments(blog_id int) (*InfoBlog, error) {
+
+	info := &InfoBlog{}
+
+	stmt := "SELECT id, title, content, created, img FROM infoblogs where id = $1"
+
+	row := m.DB.QueryRow(ctx, stmt, id)
+
+	err := row.Scan(&info.ID, &info.Title, &info.Content, &info.Created, &info.Img)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	//shortly version
+	//err := m.DB.QueryRow(ctx, stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	//if err != nil {
+	//  if errors.Is(err, sql.ErrNoRows) {
+	//    return nil, ErrNoRecord
+	//  } else {
+	//    return nil, err
+	//  }
+	//}
+	return info, nil
+}
