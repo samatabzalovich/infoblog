@@ -79,7 +79,7 @@ func (m *InfoBlogsModel) GetPopular() ([]*InfoBlog, error) {
 	var infoblogs []*InfoBlog
 	for result.Next() {
 		s := &InfoBlog{}
-		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Img, &s.Created)
+		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Created, &s.Img)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNoRecord
@@ -89,6 +89,30 @@ func (m *InfoBlogsModel) GetPopular() ([]*InfoBlog, error) {
 		infoblogs = append(infoblogs, s)
 	}
 	return infoblogs, nil
+}
+
+func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
+	stmt := `SELECT * FROM infoblogs order by created desc limit 10`
+	result, err := m.DB.Query(context.Background(), stmt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
+	}
+	defer result.Close()
+	var infoblog []*InfoBlog
+	for result.Next() {
+		s := &InfoBlog{}
+		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Created, &s.Img)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNoRecord
+			}
+			return nil, err
+		}
+		infoblog = append(infoblog, s)
+	}
+	return infoblog, nil
 }
 
 func (m *InfoBlogsModel) IsLiked(blog_id int, user_id int) (liked bool, err error) {
@@ -124,6 +148,12 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 			return err
 		}
 		pg.Insert()
+		stmt = `Update infoblogs set likes = likes + 1 where blog_id = $1`
+		pg, err = m.DB.Exec(ctx, stmt, blog_id)
+		if err != nil {
+			return err
+		}
+		pg.Update()
 	} else {
 		stmt = `Delete from likes where blog_id = $1 AND user_id = $2`
 		var pg pgconn.CommandTag
@@ -132,6 +162,12 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 			return err
 		}
 		pg.Delete()
+		stmt = `Update infoblogs set likes = likes - 1 where blog_id = $1`
+		pg, err = m.DB.Exec(ctx, stmt, blog_id)
+		if err != nil {
+			return err
+		}
+		pg.Update()
 	}
 	return nil
 }
