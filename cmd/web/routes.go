@@ -18,7 +18,6 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/infoBlog/about", dynamic.ThenFunc(app.about))
-<<<<<<<<< Temporary merge branch 1
 	router.Handler(http.MethodGet, "/users/login", dynamic.ThenFunc(app.login))
 	router.Handler(http.MethodPost, "/users/login", dynamic.ThenFunc(app.userLoginPost))
 	router.Handler(http.MethodGet, "/users/signup", dynamic.ThenFunc(app.signup))
@@ -28,12 +27,10 @@ func (app *application) routes() http.Handler {
 	protected := dynamic.Append(app.requireAuthentication)
 
 	router.Handler(http.MethodPost, "/users/logout", protected.ThenFunc(app.userLogoutPost))
-=========
 	router.Handler(http.MethodGet, "/infoBlog/samplePost", dynamic.ThenFunc(app.post))
 	router.Handler(http.MethodGet, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogView))
 	//router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
 	//router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
->>>>>>>>> Temporary merge branch 2
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 	return standard.Then(router)

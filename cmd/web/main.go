@@ -28,8 +28,8 @@ type application struct {
 }
 
 func main() {
-	addr := flag.String("addr", "localhost:4001", "HTTP network address")
-	dbURL := "postgres://postgres:1qwerty7@localhost:5432/infoblog"
+	addr := flag.String("addr", "localhost:4000", "HTTP network address")
+	dbURL := "postgres://postgres:190704Samat@localhost:5432/infoblog"
 	flag.Parse()
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)

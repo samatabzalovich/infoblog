@@ -2,16 +2,11 @@ package main
 
 import (
 	"errors"
-<<<<<<<<< Temporary merge branch 1
+	"github.com/julienschmidt/httprouter"
 	"infoblog/internal/models"
 	"infoblog/internal/validator"
 	"net/http"
-=========
-	"github.com/julienschmidt/httprouter"
-	"infoblog/internal/models"
-	"net/http"
 	"strconv"
->>>>>>>>> Temporary merge branch 2
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +24,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	app.render(w, http.StatusOK, "about.tmpl.html", data)
+	app.render(w, http.StatusOK, "about.html", data)
 }
 func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
@@ -176,11 +171,60 @@ func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	comment, err := app.infoBlogs.GetComments(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
 	data := app.newTemplateData(r)
 	data.InfoBlog = infoBlog
+	data.Comments = comment
 	app.render(w, http.StatusOK, "samplePost.html", data)
 }
 
-func (app *application) blogPost(w http.ResponseWriter, r *http.Request) {
+func (app *application) postComment(w http.ResponseWriter, r *http.Request) {
+	var form userLoginForm
 
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "login.html", data)
+		return
+	}
+
+	id, err := app.users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or password os incorrect")
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, http.StatusUnprocessableEntity, "login.html", data)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

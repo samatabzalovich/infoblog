@@ -110,7 +110,7 @@ func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 	var infoblog []*InfoBlog
 	for result.Next() {
 		s := &InfoBlog{}
-		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Img, &s.Created)
+		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Created, &s.Img)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNoRecord
@@ -196,7 +196,7 @@ func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (int
 
 func (m *InfoBlogsModel) GetComments(blog_id int) ([]*Comment, error) {
 
-	stmt := "SELECT c.comment_id, u.name, c.created, c.text FROM comments c join users u on c.user_id = users.id where blog_id = $1"
+	stmt := "SELECT c.comment_id, u.name, c.created, c.text FROM comments c join users u on c.user_id = u.id where blog_id = $1 order by c.created desc"
 
 	result, err := m.DB.Query(ctx, stmt, blog_id)
 

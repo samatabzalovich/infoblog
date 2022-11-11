@@ -12,6 +12,7 @@ type templateData struct {
 	CurrentYear     int
 	InfoBlog        *models.InfoBlog
 	InfoBlogs       []*models.InfoBlog
+	Comments        []*models.Comment
 	Form            any
 	IsAuthenticated bool
 	Flash           string // Add a Flash field to the templateData struct.
