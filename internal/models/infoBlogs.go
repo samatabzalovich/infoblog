@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -56,39 +57,27 @@ func (m *InfoBlogsModel) Get(id int) (*InfoBlog, error) {
 
 	return info, nil
 }
-func (m *InfoBlogsModel) Latest() ([]*InfoBlog, error) {
 
-	stmt := `SELECT id, title, content, created FROM infoblogs
-				ORDER BY id DESC LIMIT 10`
-
-	rows, err := m.DB.Query(ctx, stmt)
+func (m *InfoBlogsModel) GetPopular() ([]*InfoBlog, error) {
+	stmt := `SELECT * FROM infoblogs s order by likes desc limit 10`
+	result, err := m.DB.Query(context.Background(), stmt)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
 	}
-
-	infoblogs := []*InfoBlog{}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		// Create a pointer to a new zeroed Snippet struct.
+	defer result.Close()
+	var infoblogs []*InfoBlog
+	for result.Next() {
 		s := &InfoBlog{}
-		// Use rows.Scan() to copy the values from each field in the row to the
-		// new Snippet object that we created. Again, the arguments to row.Scan()
-		// must be pointers to the place you want to copy the data into, and the
-		// number of arguments must be exactly the same as the number of
-		// columns returned by your statement.
-		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Img)
+		err := result.Scan(&s.ID, &s.Title, &s.Content, &s.Likes, &s.Img, &s.Created)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNoRecord
+			}
 			return nil, err
 		}
-		// Append it to the slice of snippets.
 		infoblogs = append(infoblogs, s)
 	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
 	return infoblogs, nil
 }
