@@ -1,3 +1,4 @@
+{{define "title"}}SignUp{{end}}
 {{define "main"}}
   <!-- Page Header -->
   <header class="masthead" style="background-image: url('../../static/assets/img/contact-bg.jpg')">
@@ -17,37 +18,41 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-8 col-md-10 mx-auto">
-        <form action="/users/signup" method="POST" enctype="multipart/form-data">
-          <div class="control-group">
+        <form action="/users/signup" method="POST" novalidate>
+            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
 
+            <div class="control-group">
+              <div class="form-group floating-label-form-group controls">
               <label>Name</label>
               {{with .Form.FieldErrors.name}}
               <label class='error'>{{.}}</label>
               {{end}}
               <input type='text' class='form-control' name='name' value="{{.Form.Name}}">
-
+              </div>
           </div>
           <div class='control-group'>
-
+              <div class="form-group floating-label-form-group controls">
               <label>Email</label>
               {{with .Form.FieldErrors.email}}
               <label class='error'>{{.}}</label>
               {{end}}
               <input type='email' class='form-control' name='email' value='{{.Form.Email}}'>
-
+              </div>
           </div>
           <div class="control-group">
-
+              <div class="form-group floating-label-form-group controls">
               <label>Password</label>
               {{with .Form.FieldErrors.password}}
               <label class='error'>{{.}}</label>
               {{end}}
               <input type='password' class="form-control" name='password'>
-
+              </div>
           </div>
-          <input type='submit' class="btn btn-primary" value='Signup'>
+            <br>
+            <input type='submit' class="btn btn-primary" value='Signup'>
         </form>
       </div>
     </div>
   </div>
+<hr>
 {{end}}
