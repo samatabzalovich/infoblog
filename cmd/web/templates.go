@@ -9,11 +9,13 @@ import (
 
 // Include a Snippets field in the templateData struct.
 type templateData struct {
-	CurrentYear int
-	InfoBlog    *models.InfoBlog
-	InfoBlogs   []*models.InfoBlog
-	Form        any
-	Flash       string // Add a Flash field to the templateData struct.
+	CurrentYear     int
+	InfoBlog        *models.InfoBlog
+	InfoBlogs       []*models.InfoBlog
+	Form            any
+	IsAuthenticated bool
+	Flash           string // Add a Flash field to the templateData struct.
+	CSRFToken       string
 }
 
 // Create a humanDate function which returns a nicely formatted string
