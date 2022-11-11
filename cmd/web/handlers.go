@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"infoblog/internal/models"
 	"infoblog/internal/validator"
@@ -64,7 +65,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.users.Insert(form.Name, form.Email, form.Password)
+	err, _ = app.users.Insert(form.Name, form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
@@ -181,50 +182,47 @@ func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := app.newTemplateData(r)
+	data.Form = commentForm{}
 	data.InfoBlog = infoBlog
 	data.Comments = comment
+	println("wqdqwdwqd\n\n")
 	app.render(w, http.StatusOK, "samplePost.html", data)
 }
 
-func (app *application) postComment(w http.ResponseWriter, r *http.Request) {
-	var form userLoginForm
+type commentForm struct {
+	Message             string `form:"message"`
+	validator.Validator `form:"-"`
+}
 
+func (app *application) postComment(w http.ResponseWriter, r *http.Request) {
+	var form commentForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
+		println("dqwwdqwd")
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
-
+	form.CheckField(validator.MinChars(form.Message, 20), "message", "This field cannot be less than 20 characters long")
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
-		app.render(w, http.StatusUnprocessableEntity, "login.html", data)
+		app.render(w, http.StatusUnprocessableEntity, "samplePost.tmpl", data)
 		return
 	}
-
-	id, err := app.users.Authenticate(form.Email, form.Password)
+	params := httprouter.ParamsFromContext(r.Context())
+	blog_id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || blog_id < 1 {
+		app.notFound(w)
+		return
+	}
+	_, err = app.infoBlogs.PostComment(1, blog_id, r.PostForm.Get("message"))
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidCredentials) {
-			form.AddNonFieldError("Email or password os incorrect")
-
-			data := app.newTemplateData(r)
-			data.Form = form
-			app.render(w, http.StatusUnprocessableEntity, "login.html", data)
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
 		} else {
 			app.serverError(w, err)
 		}
 		return
 	}
-
-	err = app.sessionManager.RenewToken(r.Context())
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/infoblogs/view/%d", blog_id), http.StatusSeeOther)
 }

@@ -23,10 +23,10 @@ type UserModel struct {
 	DB *pgxpool.Pool
 }
 
-func (m *UserModel) Insert(name, email, password string) error {
+func (m *UserModel) Insert(name, email, password string) (error, int) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return err
+		return err, 0
 	}
 
 	stmt := `INSERT INTO users(name, email, hashed_password, created, status) VALUES($1, $2, $3, current_timestamp, 'user') returning id`
@@ -37,12 +37,12 @@ func (m *UserModel) Insert(name, email, password string) error {
 		var pgxSQLError *mysql.MySQLError
 		if errors.As(err, pgxSQLError) {
 			if pgxSQLError.Number == 1062 && strings.Contains(pgxSQLError.Message, "users_uc_email") {
-				return ErrDuplicateEmail
+				return ErrDuplicateEmail, 0
 			}
 		}
-		return err
+		return err, 0
 	}
-	return nil
+	return nil, id
 }
 func (m *UserModel) Authenticate(email, password string) (int, error) {
 	var id int

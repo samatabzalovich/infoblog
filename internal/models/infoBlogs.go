@@ -182,16 +182,16 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 	return nil
 }
 
-func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (int, error) {
-	stmt := `INSERT INTO comments (blog_id, user_id, text, created) VALUES ($1, $2, $3, current_timestamp) returning id`
+func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (bool, error) {
+	stmt := `INSERT INTO comments (blog_id, user_id, text, created) VALUES ($1, $2, $3, current_timestamp)`
 
-	var id int
-	err := m.DB.QueryRow(ctx, stmt, blog_id, user_id, text).Scan(&id)
+	pg, err := m.DB.Exec(ctx, stmt, blog_id, user_id, text)
+	res := pg.Insert()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 
-	return id, nil
+	return res, nil
 }
 
 func (m *InfoBlogsModel) GetComments(blog_id int) ([]*Comment, error) {
