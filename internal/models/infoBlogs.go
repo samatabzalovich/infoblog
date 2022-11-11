@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"time"
@@ -88,4 +89,49 @@ func (m *InfoBlogsModel) GetPopular() ([]*InfoBlog, error) {
 		infoblogs = append(infoblogs, s)
 	}
 	return infoblogs, nil
+}
+
+func (m *InfoBlogsModel) IsLiked(blog_id int, user_id int) (liked bool, err error) {
+	stmt := `Select exists(SELECT * FROM likes where blog_id = $1 AND user_id = $2)`
+	var result bool
+	err = m.DB.QueryRow(ctx, stmt, blog_id, user_id).Scan(&result)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, ErrNoRecord
+		} else {
+			return false, err
+		}
+	}
+	return result, nil
+}
+
+func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
+	stmt := `Select exists(SELECT * FROM likes where blog_id = $1 AND user_id = $2)`
+	var result bool
+	err = m.DB.QueryRow(ctx, stmt, blog_id, user_id).Scan(&result)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoRecord
+		} else {
+			return err
+		}
+	}
+	if result == false {
+		stmt = `Insert into likes(blog_id, user_id) values($1, $2)`
+		var pg pgconn.CommandTag
+		pg, err = m.DB.Exec(ctx, stmt, blog_id, user_id)
+		if err != nil {
+			return err
+		}
+		pg.Insert()
+	} else {
+		stmt = `Delete from likes where blog_id = $1 AND user_id = $2`
+		var pg pgconn.CommandTag
+		pg, err = m.DB.Exec(ctx, stmt, blog_id, user_id)
+		if err != nil {
+			return err
+		}
+		pg.Delete()
+	}
+	return nil
 }
