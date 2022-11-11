@@ -1,4 +1,4 @@
-module infoblog
+	module infoblog
 
 go 1.19
 
