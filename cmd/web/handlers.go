@@ -18,14 +18,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 	data := app.newTemplateData(r)
 	data.InfoBlogs = blogs
-	println(data.InfoBlogs)
+
 	app.render(w, http.StatusOK, "index.html", data)
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-	print(id)
-	print("\n\n\n\n\n\n")
 	data := app.newTemplateData(r)
 
 	app.render(w, http.StatusOK, "about.html", data)
@@ -68,7 +65,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.users.Insert(form.Name, form.Email, form.Password)
+	err, _ = app.users.Insert(form.Name, form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
@@ -159,41 +156,8 @@ func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "contact.html", data)
 }
 
-type likeForm struct {
-	Like                string `form:"checkbox""`
-	validator.Validator `form:"-"`
-}
-
-func (app *application) blogDetailPagePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
-
-	id, err := strconv.Atoi(params.ByName("id"))
-	if err != nil || id < 1 {
-		app.notFound(w)
-		return
-	}
-
-	var form likeForm
-	err = app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	err = app.infoBlogs.ToLike(1, 10)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
-
-}
-func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
-	id2 := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-	print(id2)
-	print("\n\n\n\n\n\n")
-
-	params := httprouter.ParamsFromContext(r.Context())
-
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -210,31 +174,20 @@ func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
 	}
 	comment, err := app.infoBlogs.GetComments(id)
 	if err != nil {
-		if err == models.ErrNoRecord {
+		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
 			app.serverError(w, err)
 		}
 		return
 	}
-
-	var form likeForm
-	err = app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	err = app.infoBlogs.ToLike(id, 10)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	data := app.newTemplateData(r)
+	data.Form = commentForm{}
 	data.InfoBlog = infoBlog
 	data.Comments = comment
 	println("wqdqwdwqd\n\n")
 	app.render(w, http.StatusOK, "samplePost.html", data)
+}
 
 type commentForm struct {
 	Message             string `form:"message"`
@@ -272,41 +225,4 @@ func (app *application) postComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/infoblogs/view/%d", blog_id), http.StatusSeeOther)
-func (app *application) createBlog(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
-
-	app.render(w, http.StatusOK, "createBlog.html", data)
-}
-
-type blogCreateForm struct {
-	Title               string `form:"title""`
-	Content             string `form:"content"`
-	validator.Validator `form:"-"`
-}
-
-func (app *application) createBlogPost(w http.ResponseWriter, r *http.Request) {
-
-	var form blogCreateForm
-	err := app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
-	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
-	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
-	if !form.Valid() {
-		data := app.newTemplateData(r)
-		data.Form = form
-		app.render(w, http.StatusUnprocessableEntity, "createBlog.html", data)
-		return
-	}
-
-	_, err = app.infoBlogs.Insert(form.Title, form.Content)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
 }

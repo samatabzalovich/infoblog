@@ -27,8 +27,8 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogDetailPage))
 	router.Handler(http.MethodPost, "/infoblogs/view/:id", dynamic.ThenFunc(app.blogDetailPagePost))
 
-	router.Handler(http.MethodGet, "/infoBlog/create", dynamic.ThenFunc(app.createBlog))
-	router.Handler(http.MethodPost, "/infoBlog/create", dynamic.ThenFunc(app.createBlogPost))
+	//router.Handler(http.MethodGet, "/infoBlog/create", dynamic.ThenFunc(app.createBlog))
+	//router.Handler(http.MethodPost, "/infoBlog/create", dynamic.ThenFunc(app.createBlogPost))
 	protected := dynamic.Append(app.requireAuthentication)
 
 	router.Handler(http.MethodPost, "/users/logout", protected.ThenFunc(app.userLogoutPost))
