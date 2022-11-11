@@ -28,16 +28,23 @@ type Comment struct {
 	text     string
 }
 
+type Likes struct {
+	liked_id int
+	blog_id  int
+	user_id  int
+	like_tap bool
+}
+
 type InfoBlogsModel struct {
 	DB *pgxpool.Pool
 }
 
-func (m *InfoBlogsModel) Insert(title string, content string, created int, img string) (int, error) {
+func (m *InfoBlogsModel) Insert(title string, content string) (int, error) {
 
-	stmt := `INSERT INTO infoblogs (title, content, created, img) VALUES ($1, $2, current_timestamp, &3) returning id`
+	stmt := `INSERT INTO infoblogs (title, content, created, img) VALUES ($1, $2, current_timestamp, '123') returning id`
 
 	var id int
-	err := m.DB.QueryRow(ctx, stmt, title, content, created, img).Scan(&id)
+	err := m.DB.QueryRow(ctx, stmt, title, content).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -153,7 +160,7 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 			return err
 		}
 		pg.Insert()
-		stmt = `Update infoblogs set likes = likes + 1 where blog_id = $1`
+		stmt = `Update infoblogs set likes = likes + 1 where id = $1`
 		pg, err = m.DB.Exec(ctx, stmt, blog_id)
 		if err != nil {
 			return err
@@ -167,7 +174,7 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 			return err
 		}
 		pg.Delete()
-		stmt = `Update infoblogs set likes = likes - 1 where blog_id = $1`
+		stmt = `Update infoblogs set likes = likes - 1 where id = $1`
 		pg, err = m.DB.Exec(ctx, stmt, blog_id)
 		if err != nil {
 			return err
