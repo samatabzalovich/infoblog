@@ -26,8 +26,7 @@ type InfoBlogsModel struct {
 
 func (m *InfoBlogsModel) Insert(title string, content string, created int, img string) (int, error) {
 
-	stmt := `INSERT INTO infoblogs (title, content, created, img)
-	VALUES ($1, $2, current_timestamp, &3) returning id`
+	stmt := `INSERT INTO infoblogs (title, content, created, img) VALUES ($1, $2, current_timestamp, &3) returning id`
 
 	var id int
 	err := m.DB.QueryRow(ctx, stmt, title, content, created, img).Scan(&id)
@@ -42,7 +41,7 @@ func (m *InfoBlogsModel) Get(id int) (*InfoBlog, error) {
 
 	info := &InfoBlog{}
 
-	stmt := `SELECT id, title, content, created, img FROM infoblogs where id = $1`
+	stmt := "SELECT id, title, content, created, img FROM infoblogs where id = $1"
 
 	row := m.DB.QueryRow(ctx, stmt, id)
 
@@ -55,6 +54,15 @@ func (m *InfoBlogsModel) Get(id int) (*InfoBlog, error) {
 		}
 	}
 
+	//shortly version
+	//err := m.DB.QueryRow(ctx, stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	//if err != nil {
+	//  if errors.Is(err, sql.ErrNoRows) {
+	//    return nil, ErrNoRecord
+	//  } else {
+	//    return nil, err
+	//  }
+	//}
 	return info, nil
 }
 
