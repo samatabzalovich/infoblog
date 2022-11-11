@@ -13,8 +13,9 @@ type application struct {
 }
 
 func main() {
-	addr := flag.String("addr", "localhost:4000", "HTTP network address")
-	dbURL := "postgres://postgres:190704Samat@localhost:5432/snippetbox"
+	addr := flag.String("addr", "4000", "HTTP network address")
+	dsn := flag.String("dsn", "postgres://postgres:1qwerty7@localhost:5432/snippetbox", "PostgresSQL data source name")
+	dbURL := "postgres://postgres:1qwerty7@localhost:5432/infoblog"
 	flag.Parse()
 
 }
