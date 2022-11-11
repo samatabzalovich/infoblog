@@ -219,7 +219,7 @@
           //                                       COLLECT VALIDATOR NAMES
           // =============================================================
 
-          // Get named validators
+          // Get named validator
           if ($this.data("validation") !== undefined) {
             validatorNames = $this.data("validation").split(",");
           }
@@ -239,7 +239,7 @@
           var validatorNamesToInspect = validatorNames;
           var newValidatorNamesToInspect = [];
 
-          do // repeatedly expand 'shortcut' validators into their real validators
+          do // repeatedly expand 'shortcut' validator into their real validator
           {
             // Uppercase only the first letter of each name
             $.each(validatorNames, function(i, el) {
@@ -253,7 +253,7 @@
             newValidatorNamesToInspect = [];
             $.each(validatorNamesToInspect, function(i, el) {
               if ($this.data("validation" + el + "Shortcut") !== undefined) {
-                // Are these custom validators?
+                // Are these custom validator?
                 // Pull them out!
                 $.each($this.data("validation" + el + "Shortcut").split(","), function(i2, el2) {
                   newValidatorNamesToInspect.push(el2);
