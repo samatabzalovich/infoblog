@@ -1,6 +1,13 @@
 package main
 
-import "net/http"
+import (
+	"errors"
+	"github.com/julienschmidt/httprouter"
+	"infoblog/internal/models"
+	"infoblog/internal/validator"
+	"net/http"
+	"strconv"
+)
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	blogs, err := app.infoBlogs.Latest()
@@ -11,13 +18,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.InfoBlogs = blogs
 	println(data.InfoBlogs)
-	app.render(w, http.StatusOK, "index.tmpl.html", data)
+	app.render(w, http.StatusOK, "index.html", data)
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	app.render(w, http.StatusOK, "about.tmpl.html", data)
+	app.render(w, http.StatusOK, "about.html", data)
 }
 func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
