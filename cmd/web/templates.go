@@ -12,11 +12,13 @@ type templateData struct {
 	CurrentYear          int
 	InfoBlog             *models.InfoBlog
 	InfoBlogs            []*models.InfoBlog
+	Comments             []*models.Comment
 	Form                 any
 	IsAuthenticated      bool
 	IsAuthenticatedAdmin bool
 	Flash                string // Add a Flash field to the templateData struct.
 	CSRFToken            string
+	CurrentID            int
 }
 
 // Create a humanDate function which returns a nicely formatted string

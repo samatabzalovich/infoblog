@@ -21,13 +21,6 @@ type InfoBlog struct {
 	Created time.Time
 }
 
-type Comment struct {
-	ID       int
-	Username string
-	Created  time.Time
-	text     string
-}
-
 type Likes struct {
 	liked_id int
 	blog_id  int
@@ -37,6 +30,42 @@ type Likes struct {
 
 type InfoBlogsModel struct {
 	DB *pgxpool.Pool
+}
+
+type Comment struct {
+	ID       int
+	Username string
+	Created  time.Time
+	Text     string
+}
+
+func (m *InfoBlogsModel) GetComments(blog_id int) ([]*Comment, error) {
+
+	stmt := "SELECT c.comment_id, u.name, c.created, c.text FROM comments c join users u on c.user_id = u.id where blog_id = $1 order by created desc"
+
+	result, err := m.DB.Query(ctx, stmt, blog_id)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+	var comments []*Comment
+	for result.Next() {
+		s := &Comment{}
+		err := result.Scan(&s.ID, &s.Username, &s.Created, &s.Text)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNoRecord
+			}
+			return nil, err
+		}
+		comments = append(comments, s)
+	}
+	return comments, nil
+
 }
 
 func (m *InfoBlogsModel) Insert(title string, content string) (int, error) {
@@ -184,43 +213,14 @@ func (m *InfoBlogsModel) ToLike(blog_id int, user_id int) (err error) {
 	return nil
 }
 
-func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (int, error) {
-	stmt := `INSERT INTO comments (blog_id, user_id, text, created) VALUES ($1, $2, $3, current_timestamp) returning id`
+func (m *InfoBlogsModel) PostComment(user_id int, blog_id int, text string) (bool, error) {
+	stmt := `INSERT INTO comments (blog_id, user_id, text, created) VALUES ($1, $2, $3, current_timestamp)`
 
-	var id int
-	err := m.DB.QueryRow(ctx, stmt, blog_id, user_id, text).Scan(&id)
+	pg, err := m.DB.Exec(ctx, stmt, blog_id, user_id, text)
+	res := pg.Insert()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 
-	return id, nil
-}
-
-func (m *InfoBlogsModel) GetComments(blog_id int) ([]*Comment, error) {
-
-	stmt := "SELECT c.comment_id, u.name, c.created, c.text FROM comments c join users u on c.user_id = users.id where blog_id = $1"
-
-	result, err := m.DB.Query(ctx, stmt, blog_id)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNoRecord
-		} else {
-			return nil, err
-		}
-	}
-	var comments []*Comment
-	for result.Next() {
-		s := &Comment{}
-		err := result.Scan(&s.ID, &s.Username, &s.Created, &s.text)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNoRecord
-			}
-			return nil, err
-		}
-		comments = append(comments, s)
-	}
-	return comments, nil
-
+	return res, nil
 }

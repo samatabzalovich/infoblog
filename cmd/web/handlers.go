@@ -164,58 +164,6 @@ type likeForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) blogDetailPagePost(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-
-	id, err := strconv.Atoi(params.ByName("id"))
-	if err != nil || id < 1 {
-		app.notFound(w)
-		return
-	}
-	var form likeForm
-	print(form.Signup)
-	err = app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	err = app.infoBlogs.ToLike(1, 10)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
-
-}
-func (app *application) blogDetailPage(w http.ResponseWriter, r *http.Request) {
-
-	params := httprouter.ParamsFromContext(r.Context())
-
-	id, err := strconv.Atoi(params.ByName("id"))
-	if err != nil || id < 1 {
-		app.notFound(w)
-		return
-	}
-
-	blog, err := app.infoBlogs.Get(id)
-	if err != nil {
-		if err == models.ErrNoRecord {
-			app.notFound(w)
-		} else {
-			app.serverError(w, err)
-		}
-		return
-	}
-
-	data := app.newTemplateData(r)
-	data.InfoBlog = blog
-	data.Form = models.InfoBlog{}
-	data.Form = likeForm{}
-	app.render(w, http.StatusOK, "samplePost.html", data)
-
-}
-
 func (app *application) createBlog(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = blogCreateForm{}
@@ -256,4 +204,78 @@ func (app *application) createBlogPost(w http.ResponseWriter, r *http.Request) {
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/infoBlog/create"), http.StatusSeeOther)
+}
+
+type commentForm struct {
+	Message             string `form:"message"`
+	Username            string `form:"username"`
+	validator.Validator `form:"-"`
+}
+
+func (app *application) blogView(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	infoBlog, err := app.infoBlogs.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	comment, err := app.infoBlogs.GetComments(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	data := app.newTemplateData(r)
+	data.InfoBlog = infoBlog
+	data.Comments = comment
+	data.Form = commentForm{}
+	//data.CurrentID = id2
+
+	app.render(w, http.StatusOK, "samplePost.html", data)
+}
+
+func (app *application) postComment(w http.ResponseWriter, r *http.Request) {
+
+	var form commentForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	params := httprouter.ParamsFromContext(r.Context())
+	blog_id, err := strconv.Atoi(params.ByName("id"))
+	userId, err := strconv.Atoi(params.ByName("cur"))
+
+	if err != nil || blog_id < 1 {
+		app.notFound(w)
+		return
+	}
+
+	if userId != 0 {
+		_, err = app.infoBlogs.PostComment(userId, blog_id, r.PostForm.Get("message"))
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				app.notFound(w)
+			} else {
+				app.serverError(w, err)
+			}
+			return
+		}
+		http.Redirect(w, r, fmt.Sprintf("/infoblogs/view/%d", blog_id), http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/users/login", http.StatusSeeOther)
+	}
 }

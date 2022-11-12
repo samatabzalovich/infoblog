@@ -19,6 +19,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		IsAuthenticated:      app.isAuthenticated(r),
 		IsAuthenticatedAdmin: app.isAuthenticatedAdmin(r),
 		CSRFToken:            nosurf.Token(r),
+		CurrentID:            app.sessionManager.GetInt(r.Context(), "authenticatedUserID"),
 	}
 }
 
